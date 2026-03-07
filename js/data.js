@@ -1,0 +1,60 @@
+// ── 시너지 타입 정의 ──────────────────────────────────────────
+export const SYN_TYPES = [
+  { key: '치적',            color: '#ffee58' },
+  { key: '치피증',          color: '#ef5350' },
+  { key: '공증',            color: '#ffa726' },
+  { key: '피증',            color: '#e040fb' },
+  { key: '방깎',            color: '#ff6b35' },
+  { key: '백헤드 피증',     color: '#ab47bc' },
+  { key: '정화',            color: '#69f0ae' },
+  { key: '피해감소/보호막', color: '#40c4ff' },
+  { key: '무력화',          color: '#a1887f' },
+  { key: '공속',            color: '#29b6f6' },
+  { key: '이속',            color: '#4db6ac' },
+  { key: '마회',            color: '#7986cb' },
+];
+
+// ── 직업 정의 ──────────────────────────────────────────────────
+export const CLASSES = [
+  { name: '디스트로이어',          role: 'dps',     icon: '🔨', syn: ['방깎', '무력화'] },
+  { name: '버서커',                role: 'dps',     icon: '⚔️', syn: ['피증'] },
+  { name: '워로드(고독한 기사)',   role: 'dps',     icon: '🛡️', syn: ['백헤드 피증', '정화', '피해감소/보호막'] },
+  { name: '워로드(전투 태세)',     role: 'dps',     icon: '🛡️', syn: ['방깎', '백헤드 피증', '정화', '피해감소/보호막'] },
+  { name: '홀리나이트(심판자)',    role: 'support', icon: '✝️', syn: ['치피증', '공증', '피증', '이속', '마회'] },
+  { name: '홀리나이트(축오)',      role: 'support', icon: '✝️', syn: ['공증', '피증', '정화', '피해감소/보호막', '이속', '마회'] },
+  { name: '슬레이어',              role: 'dps',     icon: '🗡️', syn: ['피증'] },
+  { name: '발키리(빛의 기사)',     role: 'dps',     icon: '⚡', syn: ['치피증'] },
+  { name: '발키리(해방자)',        role: 'support', icon: '⚡', syn: ['공증', '피증', '이속', '마회'] },
+  { name: '기공사',                role: 'dps',     icon: '☯️', syn: ['공증', '정화', '피해감소/보호막'] },
+  { name: '배틀마스터',            role: 'dps',     icon: '🥋', syn: ['치적', '공속', '이속'] },
+  { name: '인파이터',              role: 'dps',     icon: '💪', syn: ['피증', '무력화'] },
+  { name: '창술사',                role: 'dps',     icon: '🌸', syn: ['치피증'] },
+  { name: '브레이커',              role: 'dps',     icon: '💥', syn: ['피증'] },
+  { name: '스트라이커',            role: 'dps',     icon: '👊', syn: ['치적', '공속'] },
+  { name: '데빌헌터',              role: 'dps',     icon: '🔫', syn: ['치적'] },
+  { name: '블래스터',              role: 'dps',     icon: '💣', syn: ['방깎', '무력화'] },
+  { name: '스카우터',              role: 'dps',     icon: '🤖', syn: ['공증'] },
+  { name: '호크아이(두 번째 동료)', role: 'dps',    icon: '🏹', syn: ['피증', '이속'] },
+  { name: '호크아이(죽음의 습격)', role: 'dps',     icon: '🏹', syn: ['피증'] },
+  { name: '건슬링어',              role: 'dps',     icon: '🎯', syn: ['치적'] },
+  { name: '바드(진실된 용맹)',     role: 'support', icon: '🎵', syn: ['공증', '피증', '피해감소/보호막', '공속', '이속', '마회'] },
+  { name: '서머너',                role: 'dps',     icon: '🌊', syn: ['방깎', '정화', '마회'] },
+  { name: '소서리스',              role: 'dps',     icon: '❄️', syn: ['피증'] },
+  { name: '아르카나',              role: 'dps',     icon: '🃏', syn: ['치적'] },
+  { name: '데모닉',                role: 'dps',     icon: '😈', syn: ['피증'] },
+  { name: '리퍼',                  role: 'dps',     icon: '🌙', syn: ['방깎'] },
+  { name: '블레이드',              role: 'dps',     icon: '🌑', syn: ['백헤드 피증', '공속', '이속'] },
+  { name: '소울이터',              role: 'dps',     icon: '💀', syn: ['피증'] },
+  { name: '기상술사(이슬비)',      role: 'dps',     icon: '🌧️', syn: ['치적', '피해감소/보호막'] },
+  { name: '기상술사(질풍노도)',    role: 'dps',     icon: '🌪️', syn: ['치적', '공속', '이속'] },
+  { name: '도화가(회귀)',          role: 'support', icon: '🖌️', syn: ['공증', '피증', '정화', '피해감소/보호막', '공속', '이속', '마회'] },
+  { name: '도화가(만개)',          role: 'support', icon: '🖌️', syn: ['공증', '피증', '공속', '이속', '마회'] },
+  { name: '환수사',                role: 'dps',     icon: '🐉', syn: ['방깎'] },
+  { name: '가디언나이트',          role: 'dps',     icon: '🔰', syn: ['피증'] },
+];
+
+// ── 플레이어 색상 팔레트 ───────────────────────────────────────
+export const PLAYER_COLORS = [
+  '#f0c060', '#4a9eff', '#69f0ae', '#f48fb1',
+  '#ce93d8', '#80cbc4', '#ffb74d', '#ef9a9a',
+];

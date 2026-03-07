@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>로스트아크 파티 조합표</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;800&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gold:#c8962a; --gold-light:#f0c060; --gold-dim:#3d3010;
+  --bg-deep:#0a0a0f; --bg-panel:#10111a; --bg-card:#161825; --bg-hover:#1e2035;
+  --border:#2a2d45; --text:#cdd0e0; --text-dim:#7a7e9a;
+  --support-color:#4a9eff; --dps-color:#ff6060;
+  --pr-flex-border:#3a9bd5; --pr-flex-text:#7dd3fc;
+  --pr-nope-border:#c23b3b; --pr-nope-text:#f87171;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg-deep);color:var(--text);font-family:'Noto Sans KR',sans-serif;min-height:100vh;font-size:14px;
+  background-image:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(200,150,42,.05) 0%,transparent 60%);}
+
+header{text-align:center;padding:28px 20px 18px;border-bottom:1px solid var(--border);position:relative;}
+header::after{content:'';position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);
+  width:200px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+.header-title{font-family:'Cinzel',serif;font-size:26px;font-weight:800;letter-spacing:3px;
+  background:linear-gradient(135deg,var(--gold-light),var(--gold));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px;}
+.header-sub{color:var(--text-dim);font-size:13px;letter-spacing:1px;}
+
+.app-layout{max-width:1440px;margin:0 auto;padding:20px 18px;
+  display:grid;grid-template-columns:400px 1fr;gap:22px;align-items:start;}
+
+.panel{background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;padding:18px;}
+.panel-title{font-family:'Cinzel',serif;font-size:12px;letter-spacing:2px;color:var(--gold);
+  text-transform:uppercase;margin-bottom:14px;padding-bottom:10px;
+  border-bottom:1px solid var(--gold-dim);display:flex;align-items:center;justify-content:space-between;}
+
+/* ── 왼쪽 고정 레이아웃 ── */
+.left-col{display:flex;flex-direction:column;gap:16px;
+  position:sticky;top:20px;max-height:calc(100vh - 40px);}
+
+.name-add-panel{flex-shrink:0;}
+
+/* 플레이어 목록: 고정 높이 스크롤 */
+.player-list-panel{flex:1;min-height:0;display:flex;flex-direction:column;}
+.player-list-scroll{flex:1;overflow-y:auto;min-height:0;max-height:calc(100vh - 320px);padding-right:4px;}
+.player-list-scroll::-webkit-scrollbar{width:4px;}
+.player-list-scroll::-webkit-scrollbar-track{background:transparent;}
+.player-list-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.player-list-scroll::-webkit-scrollbar-thumb:hover{background:#3a3d5a;}
+
+.legend-panel{flex-shrink:0;}
+
+/* ── 공통 입력 ── */
+.row{display:flex;gap:8px;align-items:center;}
+.styled-input{background:var(--bg-deep);border:1px solid var(--border);border-radius:7px;
+  color:var(--text);padding:9px 12px;font-family:'Noto Sans KR',sans-serif;font-size:13px;
+  transition:border-color .2s;outline:none;width:100%;}
+.styled-input:focus{border-color:var(--gold-dim);}
+.btn-gold{background:linear-gradient(135deg,#1e1a08,#2a2306);border:1px solid var(--gold-dim);
+  border-radius:7px;color:var(--gold-light);padding:9px 16px;
+  font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;
+  cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0;}
+.btn-gold:hover{border-color:var(--gold);}
+.btn-icon{background:none;border:none;cursor:pointer;transition:color .15s;padding:0 4px;color:var(--text-dim);font-size:16px;line-height:1;}
+.btn-icon:hover{color:#ff5252;}
+
+/* ── 검색 드롭다운 ── */
+.search-select-wrap{position:relative;flex:1;}
+.search-input{background:var(--bg-deep);border:1px solid var(--border);border-radius:7px;
+  color:var(--text);padding:9px 34px 9px 12px;font-family:'Noto Sans KR',sans-serif;font-size:13px;
+  transition:border-color .2s;outline:none;width:100%;cursor:pointer;}
+.search-input:focus{border-color:var(--gold-dim);}
+.search-input-arrow{position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  color:var(--text-dim);pointer-events:none;font-size:12px;}
+.search-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:999;
+  background:#12131e;border:1px solid var(--border);border-radius:8px;
+  box-shadow:0 8px 30px rgba(0,0,0,.6);overflow:hidden;display:none;}
+.search-dropdown.open{display:block;}
+.search-filter-input{width:100%;background:#0a0a0f;border:none;border-bottom:1px solid var(--border);
+  color:var(--text);padding:10px 14px;font-family:'Noto Sans KR',sans-serif;font-size:13px;
+  outline:none;}
+.search-filter-input::placeholder{color:var(--text-dim);}
+.search-list{max-height:220px;overflow-y:auto;}
+.search-list::-webkit-scrollbar{width:4px;}
+.search-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.search-item{padding:9px 14px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:9px;
+  transition:background .12s;border-bottom:1px solid #1e2030;}
+.search-item:last-child{border-bottom:none;}
+.search-item:hover,.search-item.highlighted{background:var(--bg-hover);}
+.search-item-icon{width:28px;height:28px;border-radius:5px;display:flex;align-items:center;
+  justify-content:center;font-size:14px;flex-shrink:0;}
+.search-item-icon.support{background:rgba(74,158,255,.15);border:1px solid rgba(74,158,255,.3);}
+.search-item-icon.dps{background:rgba(255,96,96,.1);border:1px solid rgba(255,96,96,.25);}
+.search-item-name{flex:1;font-weight:500;}
+.search-item-role{font-size:11px;padding:2px 7px;border-radius:7px;font-weight:500;}
+.search-item-role.support{background:rgba(74,158,255,.15);color:var(--support-color);}
+.search-item-role.dps{background:rgba(255,96,96,.1);color:var(--dps-color);}
+.search-no-result{padding:14px;text-align:center;color:var(--text-dim);font-size:13px;}
+
+/* ── PR 선택 ── */
+.pr-mini{display:flex;gap:5px;margin-top:8px;}
+.pr-mini-btn{flex:1;padding:7px 5px;border-radius:6px;border:1px solid;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;text-align:center;}
+.pr-mini-btn.must{background:#111;border-color:#333;color:#888;}
+.pr-mini-btn.flex{background:#0a1e2e;border-color:#1a4a6a;color:#7dd3fc;}
+.pr-mini-btn.nope{background:#1e0a0a;border-color:#5a1a1a;color:#f87171;}
+.pr-mini-btn.must.active{border-color:#aaa;color:#eee;}
+.pr-mini-btn.flex.active{border-color:var(--pr-flex-border);}
+.pr-mini-btn.nope.active{border-color:var(--pr-nope-border);}
+
+/* ── 플레이어 블록 ── */
+.player-block{border:1px solid var(--border);border-radius:9px;overflow:hidden;margin-bottom:8px;}
+.player-block:last-child{margin-bottom:0;}
+.player-header{padding:11px 13px;display:flex;align-items:center;gap:9px;cursor:pointer;user-select:none;transition:background .15s;}
+.player-header:hover{background:var(--bg-hover);}
+.player-color-bar{width:4px;height:30px;border-radius:3px;flex-shrink:0;}
+.player-name-text{font-size:14px;font-weight:700;flex:1;}
+.player-meta{display:flex;align-items:center;gap:8px;}
+.player-char-count{font-size:12px;color:var(--text-dim);}
+.player-toggle{font-size:12px;color:var(--text-dim);transition:transform .2s;}
+.player-toggle.open{transform:rotate(90deg);}
+.player-body{border-top:1px solid var(--border);background:var(--bg-deep);padding:12px;}
+.player-body.hidden{display:none;}
+
+/* 캐릭터 카드 */
+.char-card{border-radius:7px;padding:9px 11px;display:flex;align-items:center;gap:9px;
+  cursor:pointer;transition:all .18s;user-select:none;position:relative;margin-bottom:5px;}
+.char-card:last-child{margin-bottom:0;}
+.char-card.pr-must{background:#0f0f0f;border:1px solid #333;border-left:3px solid #888;}
+.char-card.pr-flex{background:#0a1e2e;border:1px solid #1a3a5a;border-left:3px solid var(--pr-flex-border);}
+.char-card.pr-nope{background:#1a0a0a;border:1px solid #3a1515;border-left:3px solid var(--pr-nope-border);}
+.char-card:hover{filter:brightness(1.2);}
+.char-card.in-party{outline:2px solid var(--gold);outline-offset:1px;}
+.char-card.disabled-card{opacity:.3;cursor:not-allowed;pointer-events:none;}
+.class-icon{width:32px;height:32px;border-radius:5px;display:flex;align-items:center;
+  justify-content:center;font-size:15px;flex-shrink:0;}
+.class-icon.support{background:rgba(74,158,255,.15);border:1px solid rgba(74,158,255,.3);}
+.class-icon.dps{background:rgba(255,96,96,.1);border:1px solid rgba(255,96,96,.25);}
+.char-class-name{font-size:13px;font-weight:500;flex:1;line-height:1.4;}
+.char-other-party{font-size:11px;color:var(--text-dim);}
+.role-badge{font-size:11px;padding:2px 8px;border-radius:8px;font-weight:500;flex-shrink:0;}
+.role-badge.support{background:rgba(74,158,255,.15);color:var(--support-color);border:1px solid rgba(74,158,255,.2);}
+.role-badge.dps{background:rgba(255,96,96,.1);color:var(--dps-color);border:1px solid rgba(255,96,96,.2);}
+
+/* ── 오른쪽 ── */
+.right-col{display:flex;flex-direction:column;gap:18px;}
+.party-tabs{display:flex;gap:7px;flex-wrap:wrap;align-items:center;}
+.party-tab{padding:8px 16px;border-radius:7px;border:1px solid var(--border);
+  background:var(--bg-card);color:var(--text-dim);font-size:13px;cursor:pointer;transition:all .18s;
+  font-family:'Cinzel',serif;letter-spacing:1px;display:flex;align-items:center;gap:7px;}
+.party-tab:hover{background:var(--bg-hover);}
+.party-tab.active{background:#1a1a08;border-color:var(--gold-dim);color:var(--gold-light);}
+.party-tab .tab-close{font-size:15px;color:var(--text-dim);transition:color .15s;line-height:1;}
+.party-tab .tab-close:hover{color:#ff5252;}
+.btn-add-party{padding:8px 14px;border-radius:7px;border:1px dashed var(--border);
+  background:transparent;color:var(--text-dim);font-size:13px;cursor:pointer;transition:all .18s;}
+.btn-add-party:hover{border-color:var(--gold-dim);color:var(--gold-light);}
+
+.party-slots{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.slot{background:var(--bg-card);border:1px dashed var(--border);border-radius:9px;
+  padding:16px 10px;text-align:center;min-height:106px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:5px;position:relative;}
+.slot.filled{border-style:solid;border-color:var(--gold-dim);background:#12140a;}
+.slot-num{position:absolute;top:6px;left:8px;font-size:11px;color:var(--text-dim);font-family:'Cinzel',serif;}
+.slot-icon{font-size:22px;}
+.slot-char-name{font-size:13px;font-weight:700;}
+.slot-class-name{font-size:11px;color:var(--text-dim);}
+.slot-player-name{font-size:12px;margin-top:3px;padding:2px 9px;border-radius:9px;font-weight:600;}
+.slot-empty-text{font-size:12px;color:var(--text-dim);}
+.slot .btn-icon{position:absolute;top:5px;right:5px;font-size:15px;}
+
+.syn-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;}
+.syn-item{background:var(--bg-card);border:1px solid var(--border);border-radius:7px;
+  padding:11px 13px;display:flex;align-items:flex-start;gap:9px;}
+.syn-item.active{background:#141408;}
+.syn-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.syn-name{font-size:13px;font-weight:600;margin-bottom:3px;}
+.syn-from{font-size:12px;color:var(--text-dim);line-height:1.5;}
+
+.party-warning{padding:11px 14px;border-radius:7px;font-size:13px;display:flex;align-items:center;gap:8px;}
+.party-warning.warn{background:rgba(255,82,82,.07);border:1px solid rgba(255,82,82,.2);color:#ff8a80;}
+.party-warning.ok{background:rgba(105,240,174,.05);border:1px solid rgba(105,240,174,.2);color:#69f0ae;}
+.party-warning.info{background:rgba(74,158,255,.05);border:1px solid rgba(74,158,255,.2);color:#82b1ff;}
+
+.counter-bar{text-align:center;font-family:'Cinzel',serif;font-size:13px;color:var(--text-dim);letter-spacing:1px;}
+.counter-bar span{color:var(--gold-light);font-size:20px;}
+.empty-hint{text-align:center;padding:26px 18px;color:var(--text-dim);font-size:13px;
+  border:1px dashed var(--border);border-radius:9px;line-height:2;}
+
+.legend-row{display:flex;flex-wrap:wrap;gap:8px;}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-dim);}
+.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.pr-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+.pr-legend-item{display:flex;align-items:center;gap:6px;font-size:12px;}
+.pr-legend-bar{width:3px;height:15px;border-radius:2px;}
+
+.summary-card{padding:13px;background:var(--bg-card);border-radius:8px;border:1px solid var(--border);margin-bottom:10px;cursor:pointer;transition:border-color .2s;}
+.summary-card:hover{border-color:#3a3d5a;}
+.summary-card.active-party{border-color:var(--gold-dim);}
+.summary-card-title{font-size:14px;color:var(--gold-light);font-weight:600;margin-bottom:6px;}
+.summary-members{font-size:12px;color:var(--text-dim);margin-bottom:7px;line-height:1.7;}
+
+@media(max-width:1100px){
+  .app-layout{grid-template-columns:1fr;}
+  .left-col{position:static;max-height:none;}
+  .player-list-scroll{max-height:400px;}
+  .party-slots{grid-template-columns:repeat(2,1fr);}
+  .syn-grid{grid-template-columns:repeat(2,1fr);}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-title">PARTY BUILDER</div>
+  <div class="header-sub">로스트아크 4인 파티 조합표</div>
+</header>
+
+<div class="app-layout">
+
+  <!-- ── 왼쪽 (sticky) ── -->
+  <div class="left-col">
+
+    <!-- 이름 추가 -->
+    <div class="panel name-add-panel">
+      <div class="panel-title">이름 추가</div>
+      <div class="row">
+        <input class="styled-input" id="playerName" placeholder="이름 입력" maxlength="12"
+               onkeydown="if(event.key==='Enter')addPlayer()">
+        <button class="btn-gold" onclick="addPlayer()">+ 추가</button>
+      </div>
+    </div>
+
+    <!-- 이름 & 캐릭터 (스크롤 영역) -->
+    <div class="panel player-list-panel">
+      <div class="panel-title">
+        이름 &amp; 캐릭터
+        <span id="playerCount" style="color:var(--text-dim);font-size:12px;font-family:'Noto Sans KR';">0명</span>
+      </div>
+      <div class="player-list-scroll" id="playerList">
+        <div class="empty-hint">이름을 추가하면<br>캐릭터를 등록할 수 있습니다</div>
+      </div>
+    </div>
+
+    <!-- 범례 -->
+    <div class="panel legend-panel">
+      <div class="panel-title">범례</div>
+      <div class="legend-row" id="synLegend"></div>
+      <div class="pr-legend">
+        <div class="pr-legend-item"><div class="pr-legend-bar" style="background:#888;"></div><span style="color:#ccc;">무조건 채용</span></div>
+        <div class="pr-legend-item"><div class="pr-legend-bar" style="background:var(--pr-flex-border);"></div><span style="color:var(--pr-flex-text);">세팅 의존</span></div>
+        <div class="pr-legend-item"><div class="pr-legend-bar" style="background:var(--pr-nope-border);"></div><span style="color:var(--pr-nope-text);">채용률 0% 근접</span></div>
+      </div>
+      <div style="margin-top:10px;font-size:12px;color:var(--text-dim);line-height:1.7;">⚠ 시너지 수치는 패치에 따라 변동됩니다.</div>
+    </div>
+  </div>
+
+  <!-- ── 오른쪽 ── -->
+  <div class="right-col">
+
+    <div class="panel" style="padding:14px 18px;">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <div class="party-tabs" id="partyTabs"></div>
+        <button class="btn-add-party" onclick="addParty()">+ 파티 추가</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">
+        <span id="activePartyLabel">파티 1</span>
+        <div class="counter-bar"><span id="slotCount">0</span> / 4</div>
+      </div>
+      <div class="party-slots" id="partySlots"></div>
+      <div id="partyWarning" style="margin-top:12px;"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">시너지 분석</div>
+      <div id="synergyPanel"><div class="empty-hint">파티를 구성하면 시너지 분석이 표시됩니다</div></div>
+    </div>
+
+    <div class="panel" id="allPartySummary" style="display:none;">
+      <div class="panel-title">전체 파티 요약</div>
+      <div id="allPartySummaryBody"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ────────────────────────── 데이터 ──────────────────────────
+const SYN_TYPES = [
+  {key:'치적',           color:'#ffee58'},
+  {key:'치피증',         color:'#ef5350'},
+  {key:'공증',           color:'#ffa726'},
+  {key:'피증',           color:'#e040fb'},
+  {key:'방깎',           color:'#ff6b35'},
+  {key:'백헤드 피증',    color:'#ab47bc'},
+  {key:'정화',           color:'#69f0ae'},
+  {key:'피해감소/보호막',color:'#40c4ff'},
+  {key:'무력화',         color:'#a1887f'},
+  {key:'공속',           color:'#29b6f6'},
+  {key:'이속',           color:'#4db6ac'},
+  {key:'마회',           color:'#7986cb'},
+];
+
+const CLASSES = [
+  {name:'디스트로이어',          role:'dps',     icon:'🔨', syn:['방깎','무력화']},
+  {name:'버서커',                role:'dps',     icon:'⚔️', syn:['피증']},
+  {name:'워로드(고독한 기사)',   role:'dps',     icon:'🛡️', syn:['백헤드 피증','정화','피해감소/보호막']},
+  {name:'워로드(전투 태세)',     role:'dps',     icon:'🛡️', syn:['방깎','백헤드 피증','정화','피해감소/보호막']},
+  {name:'홀리나이트(심판자)',    role:'support', icon:'✝️', syn:['치피증','공증','피증','이속','마회']},
+  {name:'홀리나이트(축오)',      role:'support', icon:'✝️', syn:['공증','피증','정화','피해감소/보호막','이속','마회']},
+  {name:'슬레이어',              role:'dps',     icon:'🗡️', syn:['피증']},
+  {name:'발키리(빛의 기사)',     role:'dps',     icon:'⚡', syn:['치피증']},
+  {name:'발키리(해방자)',        role:'support', icon:'⚡', syn:['공증','피증','이속','마회']},
+  {name:'기공사',                role:'dps',     icon:'☯️', syn:['공증','정화','피해감소/보호막']},
+  {name:'배틀마스터',            role:'dps',     icon:'🥋', syn:['치적','공속','이속']},
+  {name:'인파이터',              role:'dps',     icon:'💪', syn:['피증','무력화']},
+  {name:'창술사',                role:'dps',     icon:'🌸', syn:['치피증']},
+  {name:'브레이커',              role:'dps',     icon:'💥', syn:['피증']},
+  {name:'스트라이커',            role:'dps',     icon:'👊', syn:['치적','공속']},
+  {name:'데빌헌터',              role:'dps',     icon:'🔫', syn:['치적']},
+  {name:'블래스터',              role:'dps',     icon:'💣', syn:['방깎','무력화']},
+  {name:'스카우터',              role:'dps',     icon:'🤖', syn:['공증']},
+  {name:'호크아이(두 번째 동료)',role:'dps',     icon:'🏹', syn:['피증','이속']},
+  {name:'호크아이(죽음의 습격)', role:'dps',     icon:'🏹', syn:['피증']},
+  {name:'건슬링어',              role:'dps',     icon:'🎯', syn:['치적']},
+  {name:'바드(진실된 용맹)',     role:'support', icon:'🎵', syn:['공증','피증','피해감소/보호막','공속','이속','마회']},
+  {name:'서머너',                role:'dps',     icon:'🌊', syn:['방깎','정화','마회']},
+  {name:'소서리스',              role:'dps',     icon:'❄️', syn:['피증']},
+  {name:'아르카나',              role:'dps',     icon:'🃏', syn:['치적']},
+  {name:'데모닉',                role:'dps',     icon:'😈', syn:['피증']},
+  {name:'리퍼',                  role:'dps',     icon:'🌙', syn:['방깎']},
+  {name:'블레이드',              role:'dps',     icon:'🌑', syn:['백헤드 피증','공속','이속']},
+  {name:'소울이터',              role:'dps',     icon:'💀', syn:['피증']},
+  {name:'기상술사(이슬비)',      role:'dps',     icon:'🌧️', syn:['치적','피해감소/보호막']},
+  {name:'기상술사(질풍노도)',    role:'dps',     icon:'🌪️', syn:['치적','공속','이속']},
+  {name:'도화가(회귀)',          role:'support', icon:'🖌️', syn:['공증','피증','정화','피해감소/보호막','공속','이속','마회']},
+  {name:'도화가(만개)',          role:'support', icon:'🖌️', syn:['공증','피증','공속','이속','마회']},
+  {name:'환수사',                role:'dps',     icon:'🐉', syn:['방깎']},
+  {name:'가디언나이트',          role:'dps',     icon:'🔰', syn:['피증']},
+];
+
+const PLAYER_COLORS = ['#f0c060','#4a9eff','#69f0ae','#f48fb1','#ce93d8','#80cbc4','#ffb74d','#ef9a9a'];
+
+// ── 상태 ──
+let players = [];
+let parties = [];
+let activePartyId = null;
+let playerPR = {};
+let partyCounter = 0;
+
+// 드롭다운 상태 (pid -> selectedClass)
+let selectedClass = {}; // pid -> CLASSES index
+
+// ── 초기화 ──
+(function init(){
+  const legend = document.getElementById('synLegend');
+  SYN_TYPES.forEach(s => {
+    legend.innerHTML += `<div class="legend-item"><div class="legend-dot" style="background:${s.color}"></div><span>${s.key}</span></div>`;
+  });
+  addParty();
+  document.addEventListener('click', closeAllDropdowns);
+})();
+
+// ── 드롭다운 관리 ──
+function closeAllDropdowns(e) {
+  document.querySelectorAll('.search-dropdown.open').forEach(d => {
+    if (!d.parentElement.contains(e.target)) d.classList.remove('open');
+  });
+}
+
+function toggleDropdown(pid, e) {
+  e.stopPropagation();
+  const dd = document.getElementById(`dd-${pid}`);
+  const wasOpen = dd.classList.contains('open');
+  document.querySelectorAll('.search-dropdown.open').forEach(d => d.classList.remove('open'));
+  if (!wasOpen) {
+    dd.classList.add('open');
+    const fi = document.getElementById(`ddf-${pid}`);
+    fi.value = '';
+    filterDropdown(pid);
+    setTimeout(() => fi.focus(), 50);
+  }
+}
+
+function filterDropdown(pid) {
+  const q = (document.getElementById(`ddf-${pid}`)?.value || '').toLowerCase();
+  const list = document.getElementById(`ddl-${pid}`);
+  if (!list) return;
+  const filtered = CLASSES.filter(c => c.name.toLowerCase().includes(q) || (c.role === 'support' ? '서포터' : '딜러').includes(q));
+  if (!filtered.length) {
+    list.innerHTML = `<div class="search-no-result">검색 결과 없음</div>`;
+    return;
+  }
+  list.innerHTML = filtered.map((c, i) =>
+    `<div class="search-item" onclick="selectClass(${pid},'${c.name}')">
+      <div class="search-item-icon ${c.role}">${c.icon}</div>
+      <span class="search-item-name">${c.name}</span>
+      <span class="search-item-role ${c.role}">${c.role === 'support' ? '서포터' : '딜러'}</span>
+    </div>`
+  ).join('');
+}
+
+function selectClass(pid, className) {
+  selectedClass[pid] = className;
+  const input = document.getElementById(`ddi-${pid}`);
+  const cls = CLASSES.find(c => c.name === className);
+  if (input && cls) input.value = `${cls.icon}  ${cls.name}`;
+  const dd = document.getElementById(`dd-${pid}`);
+  if (dd) dd.classList.remove('open');
+}
+
+// ── 파티 관리 ──
+function addParty() {
+  partyCounter++;
+  const id = partyCounter;
+  parties.push({id, label:`파티 ${id}`, slots:[null,null,null,null]});
+  activePartyId = id;
+  renderTabs(); renderAll();
+}
+function removeParty(id) {
+  if (parties.length <= 1) return;
+  parties = parties.filter(p => p.id !== id);
+  if (activePartyId === id) activePartyId = parties[parties.length-1].id;
+  renderTabs(); renderAll();
+}
+function setActiveParty(id) { activePartyId = id; renderTabs(); renderAll(); }
+function getActiveParty() { return parties.find(p => p.id === activePartyId); }
+
+// ── 이름 관리 ──
+function addPlayer() {
+  const name = document.getElementById('playerName').value.trim();
+  if (!name) { alert('이름을 입력해주세요.'); return; }
+  const id = Date.now();
+  const color = PLAYER_COLORS[players.length % PLAYER_COLORS.length];
+  // 추가할 때 다른 플레이어 모두 접기
+  players.forEach(p => p.open = false);
+  players.push({id, name, color, chars:[], open:true});
+  playerPR[id] = 'must';
+  selectedClass[id] = CLASSES[0].name;
+  document.getElementById('playerName').value = '';
+  renderPlayerList();
+}
+function removePlayer(pid) {
+  const p = players.find(p => p.id === pid);
+  if (p) p.chars.forEach(c => parties.forEach(party => { const si = party.slots.indexOf(c.id); if (si !== -1) party.slots[si] = null; }));
+  players = players.filter(p => p.id !== pid);
+  delete playerPR[pid]; delete selectedClass[pid];
+  renderAll();
+}
+function togglePlayer(pid) {
+  const p = players.find(p => p.id === pid);
+  if (!p) return;
+  const opening = !p.open;
+  // 아코디언: 하나만 열기
+  if (opening) players.forEach(pl => pl.open = false);
+  p.open = opening;
+  renderPlayerList();
+}
+function addChar(pid) {
+  const clsName = selectedClass[pid] || CLASSES[0].name;
+  const cls = CLASSES.find(c => c.name === clsName);
+  if (!cls) return;
+  const id = Date.now() + Math.random();
+  players.find(p => p.id === pid).chars.push({id, cls, pr: playerPR[pid] || 'must'});
+  renderAll();
+}
+function removeChar(pid, cid) {
+  parties.forEach(party => { const si = party.slots.indexOf(cid); if (si !== -1) party.slots[si] = null; });
+  const p = players.find(p => p.id === pid);
+  if (p) p.chars = p.chars.filter(c => c.id !== cid);
+  renderAll();
+}
+function setPlayerPR(pid, pr) {
+  playerPR[pid] = pr;
+  ['must','flex','nope'].forEach(p2 => { const btn = document.getElementById(`prb-${pid}-${p2}`); if (btn) btn.classList.toggle('active', p2 === pr); });
+}
+
+// ── 파티 캐릭터 토글 ──
+function toggleChar(cid) {
+  const party = getActiveParty(); if (!party) return;
+  const si = party.slots.indexOf(cid);
+  if (si !== -1) { party.slots[si] = null; renderAll(); return; }
+  const empty = party.slots.indexOf(null);
+  if (empty === -1) return;
+  party.slots[empty] = cid;
+  renderAll();
+}
+function removeFromSlot(idx) { const p = getActiveParty(); if (p) { p.slots[idx] = null; renderAll(); } }
+
+// ── 헬퍼 ──
+function findChar(cid) { for (const p of players) { const c = p.chars.find(c => c.id === cid); if (c) return {player:p, char:c}; } return null; }
+function getPartyChars(party) { return party.slots.filter(x => x !== null).map(cid => findChar(cid)).filter(Boolean); }
+
+// ── 렌더 ──
+function renderAll() { renderPlayerList(); renderTabs(); renderPartySlots(); renderSynergy(); renderAllSummary(); }
+
+function renderTabs() {
+  document.getElementById('partyTabs').innerHTML = parties.map(p =>
+    `<div class="party-tab ${p.id===activePartyId?'active':''}" onclick="setActiveParty(${p.id})">
+      ${p.label}
+      ${parties.length > 1 ? `<span class="tab-close" onclick="event.stopPropagation();removeParty(${p.id})">×</span>` : ''}
+    </div>`
+  ).join('');
+  const ap = getActiveParty();
+  if (ap) document.getElementById('activePartyLabel').textContent = ap.label;
+}
+
+function renderPlayerList() {
+  const list = document.getElementById('playerList');
+  document.getElementById('playerCount').textContent = players.length + '명';
+  if (!players.length) {
+    list.innerHTML = '<div class="empty-hint">이름을 추가하면<br>캐릭터를 등록할 수 있습니다</div>';
+    return;
+  }
+
+  const ap = getActiveParty();
+  const activeSlots = ap ? ap.slots : [];
+  const partyPlayerIds = new Set(activeSlots.filter(x=>x!==null).map(cid=>{ const r=findChar(cid); return r?r.player.id:null; }).filter(Boolean));
+  const partyFull = activeSlots.filter(x=>x!==null).length >= 4;
+
+  const usedElsewhere = new Map();
+  parties.forEach(party => {
+    if (party.id === activePartyId) return;
+    party.slots.filter(x=>x!==null).forEach(cid => {
+      if (!usedElsewhere.has(cid)) usedElsewhere.set(cid, []);
+      usedElsewhere.get(cid).push(party.label);
+    });
+  });
+
+  list.innerHTML = players.map(p => {
+    const pInParty = partyPlayerIds.has(p.id);
+    const pr = playerPR[p.id] || 'must';
+    const curClsName = selectedClass[p.id] || CLASSES[0].name;
+    const curCls = CLASSES.find(c => c.name === curClsName) || CLASSES[0];
+
+    const charsHtml = p.chars.length ? p.chars.map(c => {
+      const inParty = activeSlots.includes(c.id);
+      const playerAlreadyIn = pInParty && !inParty;
+      const disabled = (partyFull && !inParty) || playerAlreadyIn;
+      const others = usedElsewhere.get(c.id);
+      return `<div class="char-card pr-${c.pr} ${inParty?'in-party':''} ${disabled?'disabled-card':''}" onclick="toggleChar(${c.id})">
+        <div class="class-icon ${c.cls.role}">${c.cls.icon}</div>
+        <div style="flex:1;min-width:0;">
+          <div class="char-class-name">${c.cls.name}</div>
+          ${others ? `<div class="char-other-party">[${others.join(', ')}]</div>` : ''}
+        </div>
+        <div class="role-badge ${c.cls.role}">${c.cls.role==='support'?'서포':'딜러'}</div>
+        <button class="btn-icon" style="font-size:15px;" onclick="event.stopPropagation();removeChar(${p.id},${c.id})">×</button>
+      </div>`;
+    }).join('') : `<div style="font-size:12px;color:var(--text-dim);padding:4px 2px;">캐릭터를 추가해주세요</div>`;
+
+    return `<div class="player-block" style="border-color:${p.color}33;">
+      <div class="player-header" onclick="togglePlayer(${p.id})">
+        <div class="player-color-bar" style="background:${p.color};"></div>
+        <div class="player-name-text" style="color:${p.color};">${p.name}</div>
+        <div class="player-meta">
+          <span class="player-char-count">${p.chars.length}개</span>
+          ${pInParty ? `<div style="font-size:11px;padding:2px 8px;border-radius:7px;background:rgba(200,150,42,.15);color:var(--gold-light);border:1px solid var(--gold-dim);font-weight:600;">IN</div>` : ''}
+          <span class="player-toggle ${p.open?'open':''}">▶</span>
+          <button class="btn-icon" style="font-size:15px;" onclick="event.stopPropagation();removePlayer(${p.id})">×</button>
+        </div>
+      </div>
+
+      <div class="player-body ${p.open?'':'hidden'}">
+        <!-- 검색 드롭다운 + 추가 버튼 -->
+        <div class="row" style="margin-bottom:0;">
+          <div class="search-select-wrap">
+            <input class="search-input" id="ddi-${p.id}" readonly
+              value="${curCls.icon}  ${curCls.name}"
+              onclick="toggleDropdown(${p.id}, event)"
+              placeholder="직업 선택...">
+            <span class="search-input-arrow">▾</span>
+            <div class="search-dropdown" id="dd-${p.id}" onclick="event.stopPropagation()">
+              <input class="search-filter-input" id="ddf-${p.id}"
+                placeholder="직업 검색..."
+                oninput="filterDropdown(${p.id})"
+                onkeydown="event.stopPropagation()">
+              <div class="search-list" id="ddl-${p.id}"></div>
+            </div>
+          </div>
+          <button class="btn-gold" onclick="addChar(${p.id})" style="padding:9px 16px;">+</button>
+        </div>
+
+        <!-- PR 선택 -->
+        <div class="pr-mini">
+          <button class="pr-mini-btn must ${pr==='must'?'active':''}" id="prb-${p.id}-must" onclick="setPlayerPR(${p.id},'must')">■ 필수</button>
+          <button class="pr-mini-btn flex ${pr==='flex'?'active':''}" id="prb-${p.id}-flex" onclick="setPlayerPR(${p.id},'flex')">◈ 세팅</button>
+          <button class="pr-mini-btn nope ${pr==='nope'?'active':''}" id="prb-${p.id}-nope" onclick="setPlayerPR(${p.id},'nope')">✕ 비추</button>
+        </div>
+
+        <!-- 캐릭터 목록 -->
+        <div style="margin-top:10px;">${charsHtml}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // 드롭다운 초기 목록 세팅
+  players.forEach(p => { if (p.open) filterDropdown(p.id); });
+}
+
+function renderPartySlots() {
+  const party = getActiveParty();
+  const container = document.getElementById('partySlots');
+  if (!party) { container.innerHTML = ''; return; }
+  const count = party.slots.filter(x => x !== null).length;
+  document.getElementById('slotCount').textContent = count;
+
+  container.innerHTML = party.slots.map((cid, i) => {
+    if (cid === null) return `<div class="slot"><div class="slot-num">${i+1}</div>
+      <div style="font-size:20px;color:var(--text-dim);">+</div>
+      <div class="slot-empty-text">빈 슬롯</div></div>`;
+    const r = findChar(cid); if (!r) return '';
+    return `<div class="slot filled">
+      <div class="slot-num">${i+1}</div>
+      <button class="btn-icon" onclick="removeFromSlot(${i})">×</button>
+      <div class="slot-icon">${r.char.cls.icon}</div>
+      <div class="slot-char-name">${r.char.cls.name}</div>
+      <div class="slot-class-name">${r.char.cls.role==='support'?'서포터':'딜러'}</div>
+      <div class="slot-player-name" style="background:${r.player.color}22;color:${r.player.color};border:1px solid ${r.player.color}44;">${r.player.name}</div>
+    </div>`;
+  }).join('');
+
+  const warn = document.getElementById('partyWarning');
+  const pc = getPartyChars(party).map(r => r.char);
+  const sup = pc.filter(c => c.cls.role === 'support');
+  if (!count) { warn.innerHTML = ''; return; }
+  if (count < 4) warn.innerHTML = `<div class="party-warning info">📋 ${4-count}명 더 선택해주세요</div>`;
+  else if (!sup.length) warn.innerHTML = `<div class="party-warning warn">⚠ 서포터 없음 — 생존 및 버프 없이 진행</div>`;
+  else if (sup.length >= 2) warn.innerHTML = `<div class="party-warning ok">✅ 서포터 ${sup.length}명 포함 — 안정적인 구성</div>`;
+  else warn.innerHTML = `<div class="party-warning info">ℹ 서포터 1명 — 추가 서포터 배치 시 더 안정적</div>`;
+}
+
+function renderSynergy() {
+  const panel = document.getElementById('synergyPanel');
+  const party = getActiveParty();
+  if (!party) { panel.innerHTML = '<div class="empty-hint">파티를 구성하면 시너지 분석이 표시됩니다</div>'; return; }
+  const pc = getPartyChars(party).map(r => r.char);
+  if (!pc.length) { panel.innerHTML = '<div class="empty-hint">파티를 구성하면 시너지 분석이 표시됩니다</div>'; return; }
+
+  const synMap = {}; SYN_TYPES.forEach(s => synMap[s.key] = []);
+  pc.forEach(c => c.cls.syn.forEach(s => { if (synMap[s]) synMap[s].push(c.cls.name); }));
+  const present = SYN_TYPES.filter(s => synMap[s.key].length > 0);
+  const missing = SYN_TYPES.filter(s => synMap[s.key].length === 0);
+
+  let html = '<div class="syn-grid">';
+  SYN_TYPES.forEach(s => {
+    const prov = synMap[s.key]; const active = prov.length > 0;
+    html += `<div class="syn-item ${active?'active':''}">
+      <div class="syn-dot" style="background:${active?s.color:'var(--border)'}"></div>
+      <div><div class="syn-name" style="color:${active?s.color:'var(--text-dim)'}">${s.key}</div>
+      <div class="syn-from">${active ? prov.join(', ') : '—'}</div></div></div>`;
+  });
+  html += `</div>
+  <div style="margin-top:12px;padding:11px 14px;background:var(--bg-card);border-radius:8px;border:1px solid var(--border);">
+    <div style="font-size:11px;color:var(--text-dim);margin-bottom:6px;letter-spacing:1px;">SUMMARY</div>
+    <div style="font-size:14px;line-height:2;">
+      ✅ 보유: <span style="color:var(--gold-light);font-weight:700;">${present.length}종</span>
+      &nbsp;&nbsp;
+      ❌ 부재: <span style="color:#f87171;font-weight:700;">${missing.length}종</span>
+    </div>
+    ${missing.length ? `<div style="font-size:12px;color:var(--text-dim);margin-top:4px;">부재: ${missing.map(s=>s.key).join(', ')}</div>` : ''}
+  </div>`;
+  panel.innerHTML = html;
+}
+
+function renderAllSummary() {
+  const el = document.getElementById('allPartySummary');
+  const body = document.getElementById('allPartySummaryBody');
+  if (parties.length <= 1) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  body.innerHTML = parties.map(party => {
+    const pc = getPartyChars(party).map(r => r.char);
+    if (!pc.length) return `<div class="summary-card ${party.id===activePartyId?'active-party':''}" onclick="setActiveParty(${party.id})">
+      <div class="summary-card-title">${party.label}</div><div class="summary-members">비어있음</div></div>`;
+    const synMap = {}; SYN_TYPES.forEach(s => synMap[s.key] = []);
+    pc.forEach(c => c.cls.syn.forEach(s => { if (synMap[s]) synMap[s].push(c.cls.name); }));
+    const present = SYN_TYPES.filter(s => synMap[s.key].length > 0);
+    const missing = SYN_TYPES.filter(s => synMap[s.key].length === 0);
+    const sup = pc.filter(c => c.cls.role === 'support');
+    const members = pc.map(c => `${c.cls.icon} ${c.cls.name}`).join('  /  ');
+    return `<div class="summary-card ${party.id===activePartyId?'active-party':''}" onclick="setActiveParty(${party.id})">
+      <div class="summary-card-title">${party.label} <span style="font-size:11px;color:var(--text-dim);font-weight:400;">(클릭하여 전환)</span></div>
+      <div class="summary-members">${members}</div>
+      <div style="font-size:13px;line-height:1.9;">
+        서포터 <span style="color:var(--support-color);font-weight:600;">${sup.length}명</span>
+        &nbsp;&nbsp; 시너지 <span style="color:var(--gold-light);font-weight:600;">${present.length}종</span>
+        &nbsp;&nbsp; ${missing.length ? `<span style="color:#f87171;">부재 ${missing.length}종 (${missing.map(s=>s.key).join(', ')})</span>` : `<span style="color:#69f0ae;font-weight:600;">전체 커버</span>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+</script>
+</body>
+</html>

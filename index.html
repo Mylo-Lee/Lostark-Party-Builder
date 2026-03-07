@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>로스트아크 파티 조합표</title>
+  <meta name="description" content="로스트아크 4인 파티를 효율적으로 구성하고 시너지를 분석하는 파티 빌더">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;800&family=Noto+Sans+KR:wght@400;500;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <header>
+    <div class="header-title">PARTY BUILDER</div>
+    <div class="header-sub">로스트아크 4인 파티 조합표</div>
+  </header>
+
+  <div class="app-layout">
+
+    <!-- ── 왼쪽 (sticky) ── -->
+    <div class="left-col">
+
+      <!-- 캐릭터 검색 (API) -->
+      <div class="panel search-panel">
+        <div class="panel-title">
+          🔍 캐릭터 검색
+          <span style="color:var(--text-dim);font-size:11px;font-family:'Noto Sans KR';">API</span>
+        </div>
+        <div class="row">
+          <input class="styled-input" id="apiSearchInput" placeholder="캐릭터명 입력" maxlength="16"
+            onkeydown="if(event.key==='Enter') App.apiSearch()">
+          <button class="btn-gold" onclick="App.apiSearch()" id="apiSearchBtn">검색</button>
+        </div>
+        <div id="apiSearchStatus" class="search-status"></div>
+      </div>
+
+      <!-- 이름 & 캐릭터 목록 (스크롤) -->
+      <div class="panel player-list-panel">
+        <div class="panel-title">
+          이름 &amp; 캐릭터
+          <span id="playerCount" style="color:var(--text-dim);font-size:12px;font-family:'Noto Sans KR';">0명</span>
+        </div>
+        <div class="player-list-scroll" id="playerList">
+          <div class="empty-hint">이름을 추가하면<br>캐릭터를 등록할 수 있습니다</div>
+        </div>
+      </div>
+
+      <!-- 범례 -->
+      <div class="panel legend-panel">
+        <div class="panel-title">범례</div>
+        <div class="legend-row" id="synLegend"></div>
+        <div class="pr-legend">
+          <div class="pr-legend-item">
+            <div class="pr-legend-bar" style="background:#888;"></div>
+            <span style="color:#ccc;">무조건 채용</span>
+          </div>
+          <div class="pr-legend-item">
+            <div class="pr-legend-bar" style="background:var(--pr-flex-border);"></div>
+            <span style="color:var(--pr-flex-text);">세팅 의존</span>
+          </div>
+          <div class="pr-legend-item">
+            <div class="pr-legend-bar" style="background:var(--pr-nope-border);"></div>
+            <span style="color:var(--pr-nope-text);">채용률 0% 근접</span>
+          </div>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:var(--text-dim);line-height:1.7;">
+          ⚠ 시너지 수치는 패치에 따라 변동됩니다.
+        </div>
+      </div>
+
+    </div><!-- /left-col -->
+
+    <!-- ── 오른쪽 ── -->
+    <div class="right-col">
+
+      <!-- 파티 탭 -->
+      <div class="panel" style="padding:14px 18px;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <div class="party-tabs" id="partyTabs"></div>
+          <button class="btn-add-party" onclick="App.addParty()">+ 파티 추가</button>
+        </div>
+      </div>
+
+      <!-- 파티 슬롯 -->
+      <div class="panel">
+        <div class="panel-title">
+          <span id="activePartyLabel">파티 1</span>
+          <div class="counter-bar"><span id="slotCount">0</span> / 4</div>
+        </div>
+        <div class="party-slots" id="partySlots"></div>
+        <div id="partyWarning" style="margin-top:12px;"></div>
+      </div>
+
+      <!-- 시너지 분석 -->
+      <div class="panel">
+        <div class="panel-title">시너지 분석</div>
+        <div id="synergyPanel">
+          <div class="empty-hint">파티를 구성하면 시너지 분석이 표시됩니다</div>
+        </div>
+      </div>
+
+      <!-- 전체 파티 요약 (파티 2개 이상일 때 표시) -->
+      <div class="panel" id="allPartySummary" style="display:none;">
+        <div class="panel-title">전체 파티 요약</div>
+        <div id="allPartySummaryBody"></div>
+      </div>
+
+    </div><!-- /right-col -->
+
+  </div><!-- /app-layout -->
+
+  <!-- ── 캐릭터 검색 모달 ── -->
+  <div class="modal-overlay" id="searchModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">
+          📋 캐릭터 등록
+          <span id="modalDbBadge" style="display:none;margin-left:8px;font-size:10px;padding:3px 6px;background:rgba(105,240,174,0.15);color:#69f0ae;border:1px solid rgba(105,240,174,0.3);border-radius:4px;vertical-align:middle;">🗄️ DB 확인됨</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button id="modalRefreshBtn" class="btn-cancel" style="display:none;padding:5px 10px;font-size:11px;border-color:var(--gold-dim);color:var(--gold-light);" onclick="App.forceRefresh()">🔄 최신 API로 갱신</button>
+          <button class="btn-icon" style="font-size:20px;" onclick="App.closeSearchModal()">×</button>
+        </div>
+      </div>
+
+      <div class="modal-section">
+        <label class="modal-label">소유주 (이름)</label>
+        <input class="styled-input" id="modalOwnerName" placeholder="소유주 이름 입력" maxlength="12">
+      </div>
+
+      <div class="modal-section">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <label class="modal-label" style="margin-bottom:0;">캐릭터 선택</label>
+          <button class="btn-toggle-all" onclick="App.toggleAllSearchChars()">전체 선택</button>
+        </div>
+        <div class="modal-char-list" id="modalCharList"></div>
+      </div>
+
+      <div class="modal-footer">
+        <span class="modal-selected-count" id="modalSelectedCount">0개 선택</span>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-cancel" onclick="App.closeSearchModal()">취소</button>
+          <button class="btn-gold" onclick="App.registerSelectedChars()" style="padding:10px 24px;font-size:12px;">✅ 선택
+            등록</button>
+        </div>
+    </div>
+  </div>
+
+  <!-- ── 갱신 비교 모달 ── -->
+  <div class="modal-overlay" id="updateModal">
+    <div class="modal-box" style="max-width: 600px;">
+      <div class="modal-header">
+        <div class="modal-title" style="color:#69f0ae;">🔄 갱신 내역 비교</div>
+        <button class="btn-icon" style="font-size:20px;" onclick="App.closeUpdateModal()">×</button>
+      </div>
+
+      <div class="modal-section" style="padding-bottom:0;">
+        <div style="font-size:13px;color:var(--text-dim);margin-bottom:12px;text-align:center;">
+          로스트아크 API 최신 데이터와 기존 DB 데이터를 비교합니다.<br>
+          갱신을 적용하면 기존 DB와 현재 선택 화면이 덮어씌워집니다.
+        </div>
+      </div>
+
+      <div class="modal-section" style="padding-top:4px;">
+        <div class="modal-char-list" id="updateCharList" style="max-height:360px;"></div>
+      </div>
+
+      <div class="modal-footer" style="justify-content:center;gap:16px;">
+        <button class="btn-cancel" onclick="App.closeUpdateModal()" style="width:140px;">기존 정보 유지</button>
+        <button class="btn-gold" onclick="App.applyUpdate()" id="applyUpdateBtn" style="width:140px;padding:10px;font-size:13px;background:var(--gold);color:#000;">✓ 갱신 적용하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ES Module 진입점 -->
+  <script type="module" src="js/main.js"></script>
+
+</body>
+
+</html>
