@@ -55,7 +55,7 @@ export async function updateCharactersDb(searchName, characters) {
  * @returns {Promise<Array>}
  */
 export async function getSavedCharacters() {
-  const res = await fetch(`${API_BASE}/characters`);
+  const res = await fetch(`${API_BASE_URL}/characters`);
   if (!res.ok) throw new Error('캐릭터 목록 조회 실패');
   return res.json();
 }
@@ -66,7 +66,7 @@ export async function getSavedCharacters() {
  * @returns {Promise<Object>}
  */
 export async function getSavedCharacter(name) {
-  const res = await fetch(`${API_BASE}/character/${encodeURIComponent(name)}`);
+  const res = await fetch(`${API_BASE_URL}/character/${encodeURIComponent(name)}`);
   if (!res.ok) throw new Error('캐릭터 조회 실패');
   return res.json();
 }

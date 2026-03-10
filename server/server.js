@@ -96,7 +96,7 @@ app.get('/api/search/:name', async (req, res) => {
         }
         return sib;
       } catch {
-        return sib; 
+        return sib;
       }
     });
 
@@ -104,13 +104,13 @@ app.get('/api/search/:name', async (req, res) => {
 
     // 5️⃣ 응답 데이터 구성 (levelDiff 추가)
     const enriched = results.map(r => {
-      const currentLevel = r.profile?.ItemMaxLevel 
-        ? parseFloat(String(r.profile.ItemMaxLevel).replace(',', '')) 
+      const currentLevel = r.profile?.ItemMaxLevel
+        ? parseFloat(String(r.profile.ItemMaxLevel).replace(',', ''))
         : parseFloat(String(r.ItemMaxLevel || '0').replace(',', ''));
-        
+
       const oldLevel = oldLevelMap[r.CharacterName] || 0;
-      const levelDiff = currentLevel > oldLevel && oldLevel > 0 
-        ? Math.round((currentLevel - oldLevel) * 100) / 100 
+      const levelDiff = oldLevel > 0
+        ? Math.round((currentLevel - oldLevel) * 100) / 100
         : 0;
 
       return {
@@ -145,14 +145,14 @@ app.get('/api/search/:name', async (req, res) => {
  */
 app.post('/api/update-characters', (req, res) => {
   const { searchName, characters } = req.body;
-  
+
   if (!searchName || !characters || !Array.isArray(characters)) {
     return res.status(400).json({ error: '잘못된 요청입니다.' });
   }
 
   try {
     upsertSiblingsBatch(searchName, characters);
-    
+
     characters.forEach(c => {
       upsertCharacter({
         character_name: c.CharacterName,
@@ -162,7 +162,7 @@ app.post('/api/update-characters', (req, res) => {
         combat_level: c.CharacterLevel || 0,
         guild_name: c.GuildName || null,
         title: c.Title || null,
-        raw_json: JSON.stringify(c) 
+        raw_json: JSON.stringify(c)
       });
     });
 

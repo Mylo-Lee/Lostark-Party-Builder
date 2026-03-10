@@ -11,6 +11,9 @@ export let players = [];
 /** @type {Array<{id:number, label:string, slots:Array<number|null>}>} */
 export let parties = [];
 
+/** @type {Array<{id:number, pr:string, cls:Object}>} */
+export let unassignedChars = [];
+
 /** @type {number|null} */
 export let activePartyId = null;
 
@@ -24,12 +27,13 @@ export let partyCounter = 0;
 export let selectedClass = {};
 
 // ── 상태 변경 헬퍼 (단순 대입을 외부에서 할 수 없으므로 setter 제공) ──
-export function setPlayers(next)       { players = next; }
-export function setParties(next)       { parties = next; }
-export function setActivePartyId(id)  { activePartyId = id; }
-export function setPlayerPRMap(next)  { playerPR = next; }
-export function setSelectedClass(next){ selectedClass = next; }
-export function incrementPartyCounter(){ partyCounter++; return partyCounter; }
+export function setPlayers(next) { players = next; }
+export function setParties(next) { parties = next; }
+export function setUnassignedChars(next) { unassignedChars = next; }
+export function setActivePartyId(id) { activePartyId = id; }
+export function setPlayerPRMap(next) { playerPR = next; }
+export function setSelectedClass(next) { selectedClass = next; }
+export function incrementPartyCounter() { partyCounter++; return partyCounter; }
 
 // ── localStorage 저장/로드 ────────────────────────────────────
 
@@ -45,13 +49,25 @@ export function saveState() {
         chars: p.chars.map(c => ({
           id: c.id,
           pr: c.pr,
-          clsName: c.cls.name,       // cls 객체 대신 이름만 저장
+          charName: c.charName || '',
+          itemLevel: c.itemLevel || '',
+          clsName: c.cls.name,
           clsRole: c.cls.role,
           clsIcon: c.cls.icon,
           clsSyn: c.cls.syn,
         })),
       })),
       parties,
+      unassignedChars: unassignedChars.map(c => ({
+        id: c.id,
+        pr: c.pr,
+        charName: c.charName || '',
+        itemLevel: c.itemLevel || '',
+        clsName: c.cls.name,
+        clsRole: c.cls.role,
+        clsIcon: c.cls.icon,
+        clsSyn: c.cls.syn,
+      })),
       activePartyId,
       playerPR,
       partyCounter,
@@ -79,18 +95,33 @@ export function loadState() {
     players = data.players.map(p => ({
       ...p,
       chars: p.chars.map(c => {
-        // CLASSES에서 매칭, 없으면 저장된 데이터로 복원
         const cls = CLASSES.find(cl => cl.name === c.clsName) || {
           name: c.clsName,
           role: c.clsRole || 'dps',
           icon: c.clsIcon || '⚔️',
           syn: c.clsSyn || [],
         };
-        return { id: c.id, pr: c.pr, cls };
+        return { id: c.id, pr: c.pr, cls, charName: c.charName || '', itemLevel: c.itemLevel || '' };
       }),
     }));
 
     parties = data.parties;
+
+    // unassignedChars 복원
+    if (data.unassignedChars && Array.isArray(data.unassignedChars)) {
+      unassignedChars = data.unassignedChars.map(c => {
+        const cls = CLASSES.find(cl => cl.name === c.clsName) || {
+          name: c.clsName,
+          role: c.clsRole || 'dps',
+          icon: c.clsIcon || '⚔️',
+          syn: c.clsSyn || [],
+        };
+        return { id: c.id, pr: c.pr, cls, charName: c.charName || '', itemLevel: c.itemLevel || '' };
+      });
+    } else {
+      unassignedChars = [];
+    }
+
     activePartyId = data.activePartyId;
     playerPR = data.playerPR || {};
     partyCounter = data.partyCounter || 0;

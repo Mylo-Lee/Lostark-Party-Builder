@@ -1,5 +1,5 @@
 import * as State from './state.js';
-import { renderAll, renderTabs } from './render.js';
+import { renderAll } from './render.js';
 
 // ── 파티 CRUD ──────────────────────────────────────────────────
 
@@ -10,7 +10,6 @@ export function addParty() {
   const id = State.incrementPartyCounter();
   State.parties.push({ id, label: `파티 ${id}`, slots: [null, null, null, null] });
   State.setActivePartyId(id);
-  renderTabs();
   renderAll();
 }
 
@@ -24,7 +23,6 @@ export function removeParty(id) {
   if (State.activePartyId === id) {
     State.setActivePartyId(State.parties[State.parties.length - 1].id);
   }
-  renderTabs();
   renderAll();
 }
 
@@ -34,7 +32,6 @@ export function removeParty(id) {
  */
 export function setActiveParty(id) {
   State.setActivePartyId(id);
-  renderTabs();
   renderAll();
 }
 

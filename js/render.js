@@ -15,6 +15,11 @@ function findChar(cid) {
     const c = p.chars.find(c => c.id === cid);
     if (c) return { player: p, char: c };
   }
+  // 미할당 캐릭터도 탐색
+  if (State.unassignedChars) {
+    const uc = State.unassignedChars.find(c => c.id === cid);
+    if (uc) return { player: { id: 'unassigned', name: '미할당', color: '#888' }, char: uc };
+  }
   return null;
 }
 
@@ -33,12 +38,19 @@ function getPartyChars(party) {
 
 /** 모든 UI를 갱신합니다. */
 export function renderAll() {
-  renderPlayerList();
   renderTabs();
   renderPartySlots();
   renderSynergy();
   renderAllSummary();
-  saveState(); // localStorage에 상태 저장
+  renderExpeditions();
+  renderTempStorage();
+  saveState();
+}
+
+/** 플레이어 리스트 (하위 호환용 — addPlayer 등에서 호출) */
+export function renderPlayerList() {
+  renderExpeditions();
+  renderTempStorage();
 }
 
 // ── 파티 탭 ───────────────────────────────────────────────────
@@ -49,8 +61,8 @@ export function renderTabs() {
          onclick="App.setActiveParty(${p.id})">
       ${p.label}
       ${State.parties.length > 1
-        ? `<span class="tab-close" onclick="event.stopPropagation(); App.removeParty(${p.id})">×</span>`
-        : ''}
+      ? `<span class="tab-close" onclick="event.stopPropagation(); App.removeParty(${p.id})">×</span>`
+      : ''}
     </div>
   `).join('');
 
@@ -58,30 +70,23 @@ export function renderTabs() {
   if (ap) document.getElementById('activePartyLabel').textContent = ap.label;
 }
 
-// ── 플레이어 목록 ─────────────────────────────────────────────
+// ── 원정대 관리 (가운데 컬럼) ─────────────────────────────────
 
-export function renderPlayerList() {
-  const list = document.getElementById('playerList');
-  document.getElementById('playerCount').textContent = State.players.length + '명';
-
-  if (!State.players.length) {
-    list.innerHTML = '<div class="empty-hint">이름을 추가하면<br>캐릭터를 등록할 수 있습니다</div>';
-    return;
-  }
+export function renderExpeditions() {
+  const rosterList = document.getElementById('rosterList');
+  if (!rosterList) return;
 
   const ap = getActiveParty();
   const activeSlots = ap ? ap.slots : [];
   const partyFull = activeSlots.filter(x => x !== null).length >= 4;
 
-  // 현재 파티에 포함된 플레이어 ID 집합
   const partyPlayerIds = new Set(
     activeSlots
       .filter(x => x !== null)
       .map(cid => { const r = findChar(cid); return r ? r.player.id : null; })
-      .filter(Boolean)
+      .filter(x => x && x !== 'unassigned')
   );
 
-  // 다른 파티에서 사용 중인 캐릭터 → 파티 레이블 매핑
   const usedElsewhere = new Map();
   State.parties.forEach(party => {
     if (party.id === State.activePartyId) return;
@@ -91,17 +96,52 @@ export function renderPlayerList() {
     });
   });
 
-  list.innerHTML = State.players.map(p => buildPlayerBlockHTML(p, {
-    activeSlots, partyFull, partyPlayerIds, usedElsewhere,
-  })).join('');
+  if (!State.players.length) {
+    rosterList.innerHTML = '<div class="empty-hint" style="padding:20px 10px;">원정대를 추가하고<br>캐릭터를 드래그하여 등록하세요</div>';
+  } else {
+    rosterList.innerHTML = State.players.map(p => buildPlayerBlockHTML(p, {
+      activeSlots, partyFull, partyPlayerIds, usedElsewhere,
+    })).join('');
+  }
 
   // 열린 플레이어의 드롭다운 목록 초기화
   State.players.forEach(p => { if (p.open) filterDropdown(p.id); });
 }
 
-/**
- * 플레이어 블록 HTML을 생성합니다.
- */
+// ── 임시 보관함 (오른쪽 컬럼) ─────────────────────────────────
+
+export function renderTempStorage() {
+  const unassignedArea = document.getElementById('unassignedArea');
+  const tempCount = document.getElementById('tempCount');
+  if (!unassignedArea) return;
+
+  const ap = getActiveParty();
+  const activeSlots = ap ? ap.slots : [];
+  const partyFull = activeSlots.filter(x => x !== null).length >= 4;
+
+  const usedElsewhere = new Map();
+  State.parties.forEach(party => {
+    if (party.id === State.activePartyId) return;
+    party.slots.filter(x => x !== null).forEach(cid => {
+      if (!usedElsewhere.has(cid)) usedElsewhere.set(cid, []);
+      usedElsewhere.get(cid).push(party.label);
+    });
+  });
+
+  if (tempCount) tempCount.textContent = State.unassignedChars.length;
+
+  if (State.unassignedChars && State.unassignedChars.length > 0) {
+    const cardsHtml = State.unassignedChars.map(c =>
+      buildCharCardHTML(c, null, { activeSlots, partyFull, pInParty: false, usedElsewhere, source: 'unassigned' })
+    ).join('');
+    unassignedArea.innerHTML = cardsHtml;
+  } else {
+    unassignedArea.innerHTML = '<div class="empty-hint" style="padding:20px 10px;">검색 후 캐릭터를 추가하면<br>이곳에 임시 보관됩니다</div>';
+  }
+}
+
+// ── 플레이어(원정대) 블록 HTML ────────────────────────────────
+
 function buildPlayerBlockHTML(p, { activeSlots, partyFull, partyPlayerIds, usedElsewhere }) {
   const pInParty = partyPlayerIds.has(p.id);
   const pr = State.playerPR[p.id] || 'must';
@@ -110,19 +150,32 @@ function buildPlayerBlockHTML(p, { activeSlots, partyFull, partyPlayerIds, usedE
 
   const charsHtml = p.chars.length
     ? p.chars.map(c => buildCharCardHTML(c, p, { activeSlots, partyFull, pInParty, usedElsewhere })).join('')
-    : `<div style="font-size:12px;color:var(--text-dim);padding:4px 2px;">캐릭터를 추가해주세요</div>`;
+    : `<div style="font-size:12px;color:var(--text-dim);padding:4px 2px;">캐릭터를 드래그하여 추가하세요</div>`;
 
   const inPartyBadge = pInParty
     ? `<div style="font-size:11px;padding:2px 8px;border-radius:7px;background:rgba(200,150,42,.15);color:var(--gold-light);border:1px solid var(--gold-dim);font-weight:600;">IN</div>`
     : '';
 
+  const nameInputHtml = `<input class="player-name-input" type="text" value="${p.name}" 
+                         placeholder="원정대명" 
+                         style="background: transparent; border: none; outline: none; color:${p.color}; font-size:14px; font-weight:700; width: 100%; border-bottom: 1px dashed ${p.color}55;"
+                         onclick="event.stopPropagation()" 
+                         onchange="App.renamePlayer(${p.id}, this.value)" 
+                         onblur="App.renamePlayer(${p.id}, this.value)" />`;
+
   return `
-    <div class="player-block" style="border-color:${p.color}33;">
+    <div class="player-block" style="border-color:${p.color}33;"
+         ondragover="App.allowDrop(event)"
+         ondragenter="App.dragEnter(event)"
+         ondragleave="App.dragLeave(event)"
+         ondrop="App.dropChar(event, ${p.id})">
       <div class="player-header" onclick="App.togglePlayer(${p.id})">
         <div class="player-color-bar" style="background:${p.color};"></div>
-        <div class="player-name-text" style="color:${p.color};">${p.name}</div>
+        <div class="player-name-text" style="color:${p.color}; display: flex; align-items:center;">
+          ${nameInputHtml}
+        </div>
         <div class="player-meta">
-          <span class="player-char-count">${p.chars.length}개</span>
+          <span class="player-char-count">${p.chars.length}캐릭</span>
           ${inPartyBadge}
           <span class="player-toggle ${p.open ? 'open' : ''}">▶</span>
           <button class="btn-icon" style="font-size:15px;"
@@ -137,7 +190,7 @@ function buildPlayerBlockHTML(p, { activeSlots, partyFull, partyPlayerIds, usedE
             <input class="search-input" id="ddi-${p.id}" readonly
                    value="${curCls.icon}  ${curCls.name}"
                    onclick="App.toggleDropdown(${p.id}, event)"
-                   placeholder="직업 선택...">
+                   placeholder="직업 직접선택...">
             <span class="search-input-arrow">▾</span>
             <div class="search-dropdown" id="dd-${p.id}" onclick="event.stopPropagation()">
               <input class="search-filter-input" id="ddf-${p.id}"
@@ -166,26 +219,45 @@ function buildPlayerBlockHTML(p, { activeSlots, partyFull, partyPlayerIds, usedE
     </div>`;
 }
 
+// ── 캐릭터 카드 HTML ──────────────────────────────────────────
+
 /**
  * 캐릭터 카드 HTML을 생성합니다.
+ * 직업 아이콘 + 캐릭터 닉네임 + 아이템 레벨 표시
  */
-function buildCharCardHTML(c, player, { activeSlots, partyFull, pInParty, usedElsewhere }) {
+function buildCharCardHTML(c, player, { activeSlots, partyFull, pInParty, usedElsewhere, source }) {
   const inParty = activeSlots.includes(c.id);
   const playerAlreadyIn = pInParty && !inParty;
   const disabled = (partyFull && !inParty) || playerAlreadyIn;
   const others = usedElsewhere.get(c.id);
 
+  const jsSourceParam = source === 'unassigned' ? `'unassigned'` : player.id;
+  const jsRemoveHandler = source === 'unassigned'
+    ? `event.stopPropagation(); App.removeChar('unassigned', ${c.id})`
+    : `event.stopPropagation(); App.removeChar(${player.id}, ${c.id})`;
+
+  const removeBtnHtml = `<button class="btn-icon" style="font-size:14px;"
+               onclick="${jsRemoveHandler}">×</button>`;
+
+  // 캐릭터명: charName이 있으면 표시, 없으면 직업명만
+  const displayName = c.charName || c.cls.name;
+  // 아이템 레벨
+  const levelText = c.itemLevel ? `Lv.${c.itemLevel}` : '';
+
   return `
     <div class="char-card pr-${c.pr} ${inParty ? 'in-party' : ''} ${disabled ? 'disabled-card' : ''}"
+         draggable="true"
+         ondragstart="App.dragStart(event, ${jsSourceParam}, ${c.id})"
+         ondragend="this.classList.remove('dragging')"
          onclick="App.toggleChar(${c.id})">
       <div class="class-icon ${c.cls.role}">${c.cls.icon}</div>
       <div style="flex:1;min-width:0;">
-        <div class="char-class-name">${c.cls.name}</div>
+        <div class="char-class-name">${displayName}</div>
+        ${c.charName ? `<div style="font-size:11px;color:var(--text-dim);">${c.cls.name}</div>` : ''}
         ${others ? `<div class="char-other-party">[${others.join(', ')}]</div>` : ''}
       </div>
-      <div class="role-badge ${c.cls.role}">${c.cls.role === 'support' ? '서포' : '딜러'}</div>
-      <button class="btn-icon" style="font-size:15px;"
-              onclick="event.stopPropagation(); App.removeChar(${player.id}, ${c.id})">×</button>
+      ${levelText ? `<div class="sr-level" style="font-size:12px;font-weight:700;color:var(--gold-light);white-space:nowrap;">${levelText}</div>` : ''}
+      ${removeBtnHtml}
     </div>`;
 }
 
@@ -209,12 +281,15 @@ export function renderPartySlots() {
     }
     const r = findChar(cid);
     if (!r) return '';
+    const displayName = r.char.charName || r.char.cls.name;
+    const levelText = r.char.itemLevel ? `Lv.${r.char.itemLevel}` : '';
     return `<div class="slot filled">
       <div class="slot-num">${i + 1}</div>
       <button class="btn-icon" onclick="App.removeFromSlot(${i})">×</button>
       <div class="slot-icon">${r.char.cls.icon}</div>
-      <div class="slot-char-name">${r.char.cls.name}</div>
-      <div class="slot-class-name">${r.char.cls.role === 'support' ? '서포터' : '딜러'}</div>
+      <div class="slot-char-name">${displayName}</div>
+      <div class="slot-class-name">${r.char.cls.name}</div>
+      ${levelText ? `<div style="font-size:11px;color:var(--gold-light);font-weight:600;margin-top:2px;">${levelText}</div>` : ''}
       <div class="slot-player-name"
            style="background:${r.player.color}22;color:${r.player.color};border:1px solid ${r.player.color}44;">
         ${r.player.name}
@@ -283,8 +358,8 @@ export function renderSynergy() {
         ❌ 부재: <span style="color:#f87171;font-weight:700;">${missing.length}종</span>
       </div>
       ${missing.length
-        ? `<div style="font-size:12px;color:var(--text-dim);margin-top:4px;">부재: ${missing.map(s => s.key).join(', ')}</div>`
-        : ''}
+      ? `<div style="font-size:12px;color:var(--text-dim);margin-top:4px;">부재: ${missing.map(s => s.key).join(', ')}</div>`
+      : ''}
     </div>`;
 }
 
@@ -311,7 +386,7 @@ export function renderAllSummary() {
 
     const { present, missing } = buildSynMap(chars);
     const supporters = chars.filter(c => c.cls.role === 'support');
-    const members = chars.map(c => `${c.cls.icon} ${c.cls.name}`).join('  /  ');
+    const members = chars.map(c => `${c.cls.icon} ${c.charName || c.cls.name}`).join('  /  ');
     const missingText = missing.length
       ? `<span style="color:#f87171;">부재 ${missing.length}종 (${missing.map(s => s.key).join(', ')})</span>`
       : `<span style="color:#69f0ae;font-weight:600;">전체 커버</span>`;
@@ -333,10 +408,6 @@ export function renderAllSummary() {
 
 // ── 시너지 계산 헬퍼 ──────────────────────────────────────────
 
-/**
- * 캐릭터 목록에서 시너지 맵과 보유/부재 목록을 계산합니다.
- * @param {Array} chars
- */
 function buildSynMap(chars) {
   const synMap = {};
   SYN_TYPES.forEach(s => { synMap[s.key] = []; });
